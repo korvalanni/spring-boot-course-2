@@ -2,6 +2,7 @@ package ru.urfu.SecondLabTask.model;
 
 import lombok.*;
 import jakarta.validation.constraints.*;
+import ru.urfu.SecondLabTask.validation.IsValidUidAnnotation;
 
 @Data
 @Builder
@@ -12,6 +13,7 @@ public class Request {
 
     @NotBlank
     @Digits(integer = 32, fraction = 0)
+    @IsValidUidAnnotation
     private String uid;
 
     @NotBlank
@@ -25,8 +27,9 @@ public class Request {
 
     private String source;
 
+    @NotNull
     @Min(1)
-    @Digits(integer = 100000, fraction = 0)
+    @Digits(integer = 6, fraction = 0)
     private int communicationId;
 
     private int templateId;

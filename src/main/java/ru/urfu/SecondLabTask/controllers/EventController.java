@@ -1,70 +1,68 @@
 package ru.urfu.SecondLabTask.controllers;
 
 import jakarta.validation.Valid;
-import jakarta.validation.ValidationException;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import ru.urfu.SecondLabTask.exception.ErrorResponse;
+import ru.urfu.SecondLabTask.exception.ErrorMessageConstants;
 import ru.urfu.SecondLabTask.exception.UnsupportedCodeException;
-import ru.urfu.SecondLabTask.exception.MyValidationException;
+import ru.urfu.SecondLabTask.exception.ValidationException;
 import ru.urfu.SecondLabTask.model.Request;
 import ru.urfu.SecondLabTask.model.Response;
-import ru.urfu.SecondLabTask.validation.EventValidation;
-import ru.urfu.SecondLabTask.validation.UnsupportedUidValidationService;
+import ru.urfu.SecondLabTask.validation.RequestValidationService;
+
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 
 @RestController
 @AllArgsConstructor
 public class EventController {
-    private final EventValidation eventValidation;
-    private final UnsupportedUidValidationService unsupportedUidValidationService;
+    private final RequestValidationService requestValidationService;
 
-    private static final Map<Class<? extends Exception>, ErrorResponse> exceptionMapping = new HashMap<>();
-
-    static {
-        exceptionMapping.put(UnsupportedCodeException.class, new ErrorResponse("UnsupportedCodeException", "Не поддерживаемая ошибка"));
-        exceptionMapping.put(MyValidationException.class, new ErrorResponse("ValidationException", "Ошибка валидации"));
-        exceptionMapping.put(ValidationException.class, new ErrorResponse("ValidationException", "Ошибка валидации"));
+    private Response buildResponse(String uid, String operationUid, String date, String code,
+                                   String errorCode, String errorMessage) {
+        return Response.builder()
+                .uid(uid)
+                .operationUid(operationUid)
+                .systemTime(date)
+                .code(code)
+                .errorCode(errorCode)
+                .errorMessage(errorMessage)
+                .build();
     }
-
-    private ResponseEntity<Response> handleExceptions(Response response, Exception e, HttpStatus status) {
-        response.setCode("failed");
-        ErrorResponse error = exceptionMapping.getOrDefault(e.getClass(), new ErrorResponse("UnknownException", "Произошла непредвиденная ошибка"));
-        response.setErrorCode(error.errorCode());
-        response.setErrorMessage(error.errorMessage());
-        return new ResponseEntity<>(response, status);
-    }
-
 
     @PostMapping(value = "/feedback")
     public ResponseEntity<Response> feedback(@Valid @RequestBody Request request, BindingResult bindingResult) {
 
+
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
-        Response response = Response.builder()
-                .uid(request.getUid())
-                .operationUid(request.getOperationUid())
-                .systemTime(simpleDateFormat.format(new Date()))
-                .code("success")
-                .errorCode("")
-                .errorMessage("")
-                .build();
-
         try {
-            unsupportedUidValidationService.isValid(request.getUid());
-            eventValidation.isValid(bindingResult.getFieldError().toString());
-        } catch (Exception e) {
-            return handleExceptions(response, e, HttpStatus.BAD_REQUEST);
+            requestValidationService.isValid(bindingResult);
+        } catch (UnsupportedCodeException e) {
+            return new ResponseEntity<>(
+                    buildResponse(request.getUid(), request.getOperationUid(), simpleDateFormat.format(new Date()),
+                            "failed", "401", ErrorMessageConstants.UNSUPPORTED_ERROR.getMessage()),
+                    HttpStatus.BAD_REQUEST);
+        }
+        catch (ValidationException e) {
+            return new ResponseEntity<>(
+                    buildResponse(request.getUid(), request.getOperationUid(), simpleDateFormat.format(new Date()),
+                            "failed", "402", ErrorMessageConstants.VALIDATION_ERROR.getMessage()),
+                    HttpStatus.BAD_REQUEST);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(
+                    buildResponse(request.getUid(), request.getOperationUid(), simpleDateFormat.format(new Date()),
+                            "failed", "500", ErrorMessageConstants.UNKNOWN_ERROR.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>(buildResponse(request.getUid(), request.getOperationUid(),
+                simpleDateFormat.format(new Date()), "success","",""), HttpStatus.OK);
     }
 }

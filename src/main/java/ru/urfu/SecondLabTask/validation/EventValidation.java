@@ -1,9 +1,10 @@
 package ru.urfu.SecondLabTask.validation;
 
 import org.springframework.stereotype.Service;
-import ru.urfu.SecondLabTask.exception.MyValidationException;
+import org.springframework.validation.BindingResult;
+import ru.urfu.SecondLabTask.exception.UnsupportedCodeException;
 
 @Service
 public interface EventValidation {
-    void isValid(String message) throws MyValidationException;
+    void isValid(BindingResult bindingResult) throws UnsupportedCodeException;
 }
