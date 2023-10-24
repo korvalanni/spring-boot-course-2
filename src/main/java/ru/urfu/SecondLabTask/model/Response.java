@@ -2,6 +2,9 @@ package ru.urfu.SecondLabTask.model;
 
 import lombok.Data;
 import lombok.Builder;
+import ru.urfu.SecondLabTask.exception.Codes;
+import ru.urfu.SecondLabTask.exception.ErrorCodes;
+import ru.urfu.SecondLabTask.exception.ErrorMessages;
 
 @Data
 @Builder
@@ -16,11 +19,11 @@ public class Response {
     private String systemTime;
 
 
-    private String code;
+    private Codes code;
 
 
-    private String errorCode;
+    private ErrorCodes errorCode;
 
 
-    private String errorMessage;
+    private ErrorMessages errorMessage;
 }
