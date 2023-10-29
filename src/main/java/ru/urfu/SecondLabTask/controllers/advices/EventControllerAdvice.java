@@ -13,7 +13,6 @@ import ru.urfu.SecondLabTask.exceptions.CustomWrappedException;
 import ru.urfu.SecondLabTask.exceptions.UnsupportedCodeException;
 import ru.urfu.SecondLabTask.exceptions.ValidationException;
 import ru.urfu.SecondLabTask.models.Response;
-import ru.urfu.SecondLabTask.service.ResponseService;
 import ru.urfu.SecondLabTask.service.modify.ModifySystemTimeResponseService;
 import ru.urfu.SecondLabTask.service.modify.ModifyUuidResponseService;
 
@@ -25,7 +24,6 @@ public class EventControllerAdvice {
 
     private final ModifySystemTimeResponseService modifySystemTimeResponseService;
     private final ModifyUuidResponseService modifyUuidResponseService;
-    private final ResponseService responseService;
 
 
     @ExceptionHandler(value = {CustomWrappedException.class})
