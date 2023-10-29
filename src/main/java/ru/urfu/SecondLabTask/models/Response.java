@@ -1,10 +1,10 @@
-package ru.urfu.SecondLabTask.model;
+package ru.urfu.SecondLabTask.models;
 
 import lombok.Data;
 import lombok.Builder;
-import ru.urfu.SecondLabTask.exception.Codes;
-import ru.urfu.SecondLabTask.exception.ErrorCodes;
-import ru.urfu.SecondLabTask.exception.ErrorMessages;
+import ru.urfu.SecondLabTask.enums.Codes;
+import ru.urfu.SecondLabTask.enums.ErrorCodes;
+import ru.urfu.SecondLabTask.enums.ErrorMessages;
 
 @Data
 @Builder

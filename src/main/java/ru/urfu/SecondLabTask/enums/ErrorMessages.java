@@ -1,4 +1,4 @@
-package ru.urfu.SecondLabTask.exception;
+package ru.urfu.SecondLabTask.enums;
 
 
 import com.fasterxml.jackson.annotation.JsonValue;

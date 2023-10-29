@@ -2,64 +2,41 @@ package ru.urfu.SecondLabTask.controllers;
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import ru.urfu.SecondLabTask.exception.*;
-import ru.urfu.SecondLabTask.model.Request;
-import ru.urfu.SecondLabTask.model.Response;
-import ru.urfu.SecondLabTask.util.DateTimeUtil;
+import ru.urfu.SecondLabTask.enums.Codes;
+import ru.urfu.SecondLabTask.enums.ErrorCodes;
+import ru.urfu.SecondLabTask.enums.ErrorMessages;
+import ru.urfu.SecondLabTask.exceptions.CustomWrappedException;
+import ru.urfu.SecondLabTask.models.Request;
+import ru.urfu.SecondLabTask.models.Response;
+import ru.urfu.SecondLabTask.service.ResponseService;
 import ru.urfu.SecondLabTask.validation.RequestValidationService;
 
 
-import java.util.Date;
-
-
+@Slf4j
 @RestController
 @AllArgsConstructor
 public class EventController {
     private final RequestValidationService requestValidationService;
+    private final ResponseService responseService;
 
-    private Response buildResponse(String uid, String operationUid, Codes code,
-                                   ErrorCodes errorCode, ErrorMessages errorMessage) {
-        return Response.builder()
-                .uid(uid)
-                .operationUid(operationUid)
-                .systemTime(DateTimeUtil.getCustomFormat().format(new Date()))
-                .code(code)
-                .errorCode(errorCode)
-                .errorMessage(errorMessage)
-                .build();
-    }
 
     @PostMapping(value = "/feedback")
     public ResponseEntity<Response> feedback(@Valid @RequestBody Request request, BindingResult bindingResult) {
-
-
+        Response response = this.responseService.buildResponse(request.getUid(), request.getOperationUid(),
+                Codes.SUCCESS, ErrorCodes.EMPTY, ErrorMessages.EMPTY_ERROR);
         try {
             requestValidationService.isValid(bindingResult);
-        } catch (UnsupportedCodeException e) {
-            return new ResponseEntity<>(
-                    buildResponse(request.getUid(), request.getOperationUid(),
-                            Codes.FAILED, ErrorCodes.UNSUPPORTED, ErrorMessages.UNSUPPORTED_ERROR),
-                    HttpStatus.BAD_REQUEST);
-        } catch (ValidationException e) {
-            return new ResponseEntity<>(
-                    buildResponse(request.getUid(), request.getOperationUid(), Codes.FAILED,
-                            ErrorCodes.VALIDATION_EXCEPTION, ErrorMessages.VALIDATION_ERROR),
-                    HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity<>(
-                    buildResponse(request.getUid(), request.getOperationUid(),
-                            Codes.FAILED, ErrorCodes.UNKNOWN, ErrorMessages.UNKNOWN_ERROR),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
+            log.info("Request {} is valid", request);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            throw new CustomWrappedException(e, response);
         }
-
-        return new ResponseEntity<>(
-                buildResponse(request.getUid(), request.getOperationUid(),
-                        Codes.SUCCESS, ErrorCodes.EMPTY, ErrorMessages.EMPTY_ERROR),
-                HttpStatus.OK);
     }
+
 }

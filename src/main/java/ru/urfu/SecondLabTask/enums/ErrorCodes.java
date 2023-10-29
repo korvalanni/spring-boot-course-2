@@ -1,4 +1,4 @@
-package ru.urfu.SecondLabTask.exception;
+package ru.urfu.SecondLabTask.enums;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import ru.urfu.SecondLabTask.constants.ErrorCodesConstants;
@@ -10,8 +10,8 @@ public enum ErrorCodes {
     UNSUPPORTED(ErrorCodesConstants.UNSUPPORTED);
     private final String message;
 
-    ErrorCodes(String name){
-        this.message = name;
+    ErrorCodes(String message){
+        this.message = message;
     }
 
     @JsonValue
