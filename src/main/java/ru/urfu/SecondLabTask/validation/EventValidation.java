@@ -6,5 +6,5 @@ import ru.urfu.SecondLabTask.exceptions.UnsupportedCodeException;
 
 @Service
 public interface EventValidation {
-    void isValid(BindingResult bindingResult) throws UnsupportedCodeException;
+    void isValid(BindingResult bindingResult, String uid, String operationUid) throws UnsupportedCodeException;
 }

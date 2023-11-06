@@ -7,15 +7,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import ru.urfu.SecondLabTask.enums.Codes;
-import ru.urfu.SecondLabTask.enums.ErrorCodes;
-import ru.urfu.SecondLabTask.enums.ErrorMessages;
-import ru.urfu.SecondLabTask.exceptions.CustomWrappedException;
-import ru.urfu.SecondLabTask.exceptions.UnsupportedCodeException;
-import ru.urfu.SecondLabTask.exceptions.ValidationException;
+import ru.urfu.SecondLabTask.exceptions.*;
 import ru.urfu.SecondLabTask.models.Response;
+import ru.urfu.SecondLabTask.service.ResponseService;
 import ru.urfu.SecondLabTask.service.modify.ModifySystemTimeResponseService;
 import ru.urfu.SecondLabTask.service.modify.ModifyUuidResponseService;
-
 
 @Slf4j
 @ControllerAdvice
@@ -24,51 +20,36 @@ public class EventControllerAdvice {
 
     private final ModifySystemTimeResponseService modifySystemTimeResponseService;
     private final ModifyUuidResponseService modifyUuidResponseService;
+    private final ResponseService responseService;
 
 
-    @ExceptionHandler(value = {CustomWrappedException.class})
-    public ResponseEntity<Response> handleCustomWrappedException(CustomWrappedException ex) {
-        RuntimeException originalException = ex.getOriginalException();
-        Response response = ex.getResponse();
+    private ResponseEntity<Response> buildExceptionResponseEntity(RepresentableException ex, String uuid, String operationUid) {
+        Response response = this.responseService.buildResponse(uuid, operationUid,
+                Codes.FAILED, ex.getErrorCode(), ex.getErrorMessages());
 
-        Codes code = response.getCode();
-        ErrorCodes errorCode = response.getErrorCode();
-        ErrorMessages errorMessage = response.getErrorMessage();
-
-        Codes updatedCode =Codes.FAILED;
-        ErrorCodes updatedErrorCode;
-        ErrorMessages updatedErrorMessage;
-        HttpStatus status;
-
-        if (originalException instanceof UnsupportedCodeException) {
-            log.error("Caught UnsupportedCodeException = {}", originalException.getMessage(), originalException);
-            updatedErrorCode = ErrorCodes.UNSUPPORTED;
-            updatedErrorMessage = ErrorMessages.UNSUPPORTED_ERROR;
-            status = HttpStatus.BAD_REQUEST;
-        } else if (originalException instanceof ValidationException) {
-            log.error("Caught ValidationException = {}", originalException.getMessage(), originalException);
-            updatedErrorCode = ErrorCodes.VALIDATION_EXCEPTION;
-            updatedErrorMessage = ErrorMessages.VALIDATION_ERROR;
-            status = HttpStatus.BAD_REQUEST;
-        } else {
-            log.error("Caught UnknownException = {}", originalException.getMessage(), originalException);
-            updatedErrorCode = ErrorCodes.UNKNOWN;
-            updatedErrorMessage = ErrorMessages.UNKNOWN_ERROR;
-            status = HttpStatus.INTERNAL_SERVER_ERROR;
-        }
-        log.info("Response errorCode {} changed to {}", errorCode, updatedErrorCode);
-        response.setErrorCode(updatedErrorCode);
-
-        log.info("Response code {} sent changed to {}", code, updatedCode);
-        response.setCode(updatedCode);
-
-        log.info("Response errorMessage {} changed to {}", errorMessage, updatedErrorMessage);
-        response.setErrorMessage(updatedErrorMessage);
+        log.error("Response {} created", response);
 
         response = modifySystemTimeResponseService.modify(response);
         response = modifyUuidResponseService.modify(response);
 
-        log.error("Response {} sent due to {}", response, originalException.getClass().getSimpleName());
-        return new ResponseEntity<>(response, status);
+        log.error("Response {} with Exception info sent", response);
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(value = {UnsupportedCodeException.class})
+    public ResponseEntity<Response> handleUnsupportedCodeException(UnsupportedCodeException ex) {
+        return buildExceptionResponseEntity(ex, ex.getUid(), ex.getOperationUid());
+    }
+
+
+    @ExceptionHandler(value = {ValidationException.class})
+    public ResponseEntity<Response> handleValidationExceptionException(UnsupportedCodeException ex) {
+        return buildExceptionResponseEntity(ex, ex.getUid(), ex.getOperationUid());
+    }
+
+    @ExceptionHandler(value = {UnknownException.class})
+    public ResponseEntity<Response> handleUnknownException(UnknownException ex) {
+        return buildExceptionResponseEntity(ex, ex.getUid(), ex.getOperationUid());
     }
 }
