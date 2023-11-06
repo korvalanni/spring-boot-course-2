@@ -9,7 +9,6 @@ import ru.urfu.SecondLabTask.validation.IsValidUidAnnotation;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class Request {
 
     @NotBlank
