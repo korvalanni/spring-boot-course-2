@@ -40,7 +40,7 @@ public class EventController {
             log.error("UnsupportedException caught: {}", ex.toString());
             throw ex;
         } catch (ValidationException ex) {
-            log.error("ValidationException caught: {}", ex.toString());
+            log.error("ValidationException caught: {}", ex.getMessage());
             throw ex;
         } catch (Exception ex) {
             log.error("Exception caught: {}", ex.toString());

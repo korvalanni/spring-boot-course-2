@@ -44,7 +44,7 @@ public class EventControllerAdvice {
 
 
     @ExceptionHandler(value = {ValidationException.class})
-    public ResponseEntity<Response> handleValidationExceptionException(UnsupportedCodeException ex) {
+    public ResponseEntity<Response> handleValidationExceptionException(ValidationException ex) {
         return buildExceptionResponseEntity(ex, ex.getUid(), ex.getOperationUid());
     }
 
